@@ -39,7 +39,6 @@ jobs:
           echo "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=346334408700" >> .env.local
           echo "NEXT_PUBLIC_FIREBASE_APP_ID=1:346334408700:web:69b710ecda69f4cbc44c79" >> .env.local
           echo "NEXT_PUBLIC_GOOGLE_SHEET_ID=${{ secrets.GOOGLE_SHEET_ID }}" >> .env.local
-          echo "NEXT_PUBLIC_GOOGLE_SHEETS_API_KEY=${{ secrets.GOOGLE_SHEETS_API_KEY }}" >> .env.local
           echo "NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" >> .env.local
       
       - name: Build
