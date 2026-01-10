@@ -23,6 +23,16 @@ export default function InstrumentStatus({ initialInstruments }: InstrumentStatu
   useEffect(() => {
     loadInstrumentsFromFirebase();
     
+    // Refresh data when page becomes visible (tab switching)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log('Page became visible, refreshing instruments...');
+        loadInstrumentsFromFirebase();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
     // Pull-to-refresh functionality
     let startY = 0;
     let isRefreshing = false;
@@ -48,6 +58,7 @@ export default function InstrumentStatus({ initialInstruments }: InstrumentStatu
     document.addEventListener('touchmove', handleTouchMove);
     
     return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       document.removeEventListener('touchstart', handleTouchStart);
       document.removeEventListener('touchmove', handleTouchMove);
     };

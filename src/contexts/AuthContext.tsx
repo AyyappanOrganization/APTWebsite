@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { User, onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
+import { User, onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, signOut } from 'firebase/auth';
 import { auth, googleProvider } from '@/lib/firebase';
 import { isUserAuthorized } from '@/lib/auth';
 
@@ -27,14 +27,35 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(user);
       setLoading(false);
     });
+    
+    // Check for redirect result on page load
+    getRedirectResult(auth).then((result) => {
+      if (result?.user) {
+        console.log('Redirect sign-in successful:', result.user.email);
+      }
+    }).catch((error) => {
+      console.error('Redirect sign-in error:', error);
+    });
+    
     return unsubscribe;
   }, []);
 
   const signInWithGoogle = async () => {
     try {
       console.log('Attempting Google sign-in...');
-      const result = await signInWithPopup(auth, googleProvider);
-      console.log('Sign-in successful:', result.user.email);
+      
+      // Detect if we're on mobile Safari
+      const isMobileSafari = /iPad|iPhone|iPod/.test(navigator.userAgent) && /Safari/.test(navigator.userAgent);
+      
+      if (isMobileSafari) {
+        // Use redirect for mobile Safari
+        console.log('Using redirect for mobile Safari');
+        await signInWithRedirect(auth, googleProvider);
+      } else {
+        // Use popup for desktop
+        const result = await signInWithPopup(auth, googleProvider);
+        console.log('Sign-in successful:', result.user.email);
+      }
     } catch (error: any) {
       console.error('Sign in error:', error);
       alert(`Sign-in failed: ${error.message}`);
