@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Instrument } from '@/data/instruments';
 import { Member, membersList } from '@/data/members';
 import { FirebaseService } from '@/lib/firebase-service';
@@ -12,6 +13,7 @@ interface InstrumentStatusProps {
 
 export default function InstrumentStatus({ initialInstruments }: InstrumentStatusProps) {
   const { user } = useAuth();
+  const router = useRouter();
   const [instruments, setInstruments] = useState<Instrument[]>(initialInstruments);
   const [activeTab, setActiveTab] = useState<'available' | 'checkedOut'>('available');
   const [selectedInstrument, setSelectedInstrument] = useState<Instrument | null>(null);
@@ -22,7 +24,9 @@ export default function InstrumentStatus({ initialInstruments }: InstrumentStatu
 
   useEffect(() => {
     loadInstrumentsFromFirebase();
-    
+  }, []); // Load on mount
+
+  useEffect(() => {
     // Refresh data when window gets focus (tab switching back)
     const handleFocus = () => {
       console.log('Window focused, refreshing instruments...');
