@@ -12,21 +12,9 @@ export class GoogleOAuthService {
   private static isAuthenticating: boolean = false;
 
   static async initialize() {
-    // Check if we're returning from OAuth redirect
-    if (typeof window !== 'undefined' && window.location.hash.includes('access_token')) {
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const accessToken = hashParams.get('access_token');
-      if (accessToken) {
-        this.accessToken = accessToken;
-        localStorage.setItem('google_access_token', accessToken);
-        // Clean up the URL
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }
-    }
-    
     // Try to restore token from localStorage
     if (typeof window !== 'undefined') {
-      this.accessToken = this.accessToken || localStorage.getItem('google_access_token');
+      this.accessToken = localStorage.getItem('google_access_token');
     }
     
     return new Promise<void>((resolve) => {
@@ -112,23 +100,6 @@ export class GoogleOAuthService {
         this.tokenClient.callback = originalCallback;
       };
 
-      const isMobileSafari = /iPad|iPhone|iPod/.test(navigator.userAgent) && /Safari/.test(navigator.userAgent);
-      
-      if (isMobileSafari) {
-        // For mobile Safari, use redirect flow
-        const basePath = process.env.NODE_ENV === 'production' ? '/APTWebsite' : '';
-        const redirectUri = window.location.origin + basePath + '/';
-        const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
-          `client_id=${this.CLIENT_ID}&` +
-          `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-          `response_type=token&` +
-          `scope=${encodeURIComponent(this.SCOPES)}&` +
-          `prompt=consent`;
-        
-        window.location.href = authUrl;
-        return;
-      }
-      
       this.tokenClient.requestAccessToken();
     });
   }
