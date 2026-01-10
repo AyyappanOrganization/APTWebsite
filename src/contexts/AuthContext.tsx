@@ -33,16 +33,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signInWithGoogle = async () => {
     try {
-      setLoading(true);
       const result = await signInWithPopup(auth, googleProvider);
       console.log('Sign-in successful:', result.user.email);
-      // Don't set loading to false here - let onAuthStateChanged handle it
     } catch (error: any) {
       console.error('Sign-in failed:', error.code, error.message);
-      setLoading(false);
-      if (error.code !== 'auth/popup-closed-by-user') {
-        alert(`Sign-in failed: ${error.message}`);
-      }
+      alert(`Sign-in failed: ${error.message}`);
     }
   };
 
