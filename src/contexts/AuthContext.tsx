@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { User, onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, signOut } from 'firebase/auth';
+import { User, onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
 import { auth, googleProvider } from '@/lib/firebase';
 import { isUserAuthorized } from '@/lib/auth';
 
@@ -21,20 +21,20 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [debugInfo, setDebugInfo] = useState<string[]>([]);
+
+  const addDebug = (message: string) => {
+    console.log(message);
+    setDebugInfo(prev => [...prev.slice(-4), `${new Date().toLocaleTimeString()}: ${message}`]);
+  };
 
   useEffect(() => {
+    addDebug('AuthProvider mounted - starting auth check');
+    
     const unsubscribe = onAuthStateChanged(auth, (user) => {
+      addDebug(`Auth state changed: ${user?.email || 'No user'}`);
       setUser(user);
       setLoading(false);
-    });
-    
-    // Check for redirect result on page load
-    getRedirectResult(auth).then((result) => {
-      if (result?.user) {
-        console.log('Redirect sign-in successful:', result.user.email);
-      }
-    }).catch((error) => {
-      console.error('Redirect sign-in error:', error);
     });
     
     return unsubscribe;
@@ -42,22 +42,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signInWithGoogle = async () => {
     try {
-      console.log('Attempting Google sign-in...');
-      
-      // Detect if we're on mobile Safari
-      const isMobileSafari = /iPad|iPhone|iPod/.test(navigator.userAgent) && /Safari/.test(navigator.userAgent);
-      
-      if (isMobileSafari) {
-        // Use redirect for mobile Safari
-        console.log('Using redirect for mobile Safari');
-        await signInWithRedirect(auth, googleProvider);
-      } else {
-        // Use popup for desktop
-        const result = await signInWithPopup(auth, googleProvider);
-        console.log('Sign-in successful:', result.user.email);
-      }
+      addDebug('Starting popup sign-in');
+      const result = await signInWithPopup(auth, googleProvider);
+      addDebug(`Sign-in successful: ${result.user.email}`);
     } catch (error: any) {
-      console.error('Sign in error:', error);
+      addDebug(`Sign-in failed: ${error.code} - ${error.message}`);
       alert(`Sign-in failed: ${error.message}`);
     }
   };
@@ -111,6 +100,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       getAccessToken
     }}>
       {children}
+      {/* Debug info for mobile - always show */}
+      <div className="fixed bottom-0 left-0 right-0 bg-black text-white text-xs p-2 z-50 max-h-32 overflow-y-auto">
+        <div>Debug Panel Active</div>
+        {debugInfo.map((info, i) => (
+          <div key={i}>{info}</div>
+        ))}
+      </div>
     </AuthContext.Provider>
   );
 };

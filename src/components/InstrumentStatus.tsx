@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Instrument } from '@/data/instruments';
 import { Member, membersList } from '@/data/members';
@@ -22,77 +22,7 @@ export default function InstrumentStatus({ initialInstruments }: InstrumentStatu
   const [loading, setLoading] = useState(false);
   const [showForceUpdate, setShowForceUpdate] = useState(false);
 
-  useEffect(() => {
-    loadInstrumentsFromFirebase();
-  }, []); // Load on mount
-
-  useEffect(() => {
-    // Refresh data when window gets focus (tab switching back)
-    const handleFocus = () => {
-      console.log('Window focused, refreshing instruments...');
-      loadInstrumentsFromFirebase();
-    };
-    
-    window.addEventListener('focus', handleFocus);
-    
-    // Pull-to-refresh functionality
-    let startY = 0;
-    let isRefreshing = false;
-    
-    const handleTouchStart = (e: TouchEvent) => {
-      startY = e.touches[0].clientY;
-    };
-    
-    const handleTouchMove = (e: TouchEvent) => {
-      if (window.scrollY === 0 && !isRefreshing) {
-        const currentY = e.touches[0].clientY;
-        const pullDistance = currentY - startY;
-        
-        if (pullDistance > 100) {
-          isRefreshing = true;
-          loadInstrumentsFromFirebase();
-          setTimeout(() => { isRefreshing = false; }, 1000);
-        }
-      }
-    };
-    
-    document.addEventListener('touchstart', handleTouchStart);
-    document.addEventListener('touchmove', handleTouchMove);
-    
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-      document.removeEventListener('touchstart', handleTouchStart);
-      document.removeEventListener('touchmove', handleTouchMove);
-    };
-  }, []);
-
-  const forceUpdateFirebase = async () => {
-    try {
-      setLoading(true);
-      console.log('Force updating Firebase...');
-      await FirebaseService.clearAllInstruments();
-      
-      for (const instrument of initialInstruments) {
-        await FirebaseService.addInstrument({
-          id: instrument.id,
-          name: instrument.name,
-          type: instrument.type,
-          image: instrument.image,
-          status: 'available',
-          checkedOutBy: null
-        });
-      }
-      
-      await loadInstrumentsFromFirebase();
-      setShowForceUpdate(false);
-    } catch (error) {
-      console.error('Force update failed:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadInstrumentsFromFirebase = async () => {
+  const loadInstrumentsFromFirebase = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -147,6 +77,76 @@ export default function InstrumentStatus({ initialInstruments }: InstrumentStatu
         checkedOutBy: null,
         checkedOutAt: null
       })));
+    } finally {
+      setLoading(false);
+    }
+  }, [initialInstruments]);
+
+  useEffect(() => {
+    loadInstrumentsFromFirebase();
+  }, [loadInstrumentsFromFirebase]);
+
+  useEffect(() => {
+    // Refresh data when window gets focus (tab switching back)
+    const handleFocus = () => {
+      console.log('Window focused, refreshing instruments...');
+      loadInstrumentsFromFirebase();
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    
+    // Pull-to-refresh functionality
+    let startY = 0;
+    let isRefreshing = false;
+    
+    const handleTouchStart = (e: TouchEvent) => {
+      startY = e.touches[0].clientY;
+    };
+    
+    const handleTouchMove = (e: TouchEvent) => {
+      if (window.scrollY === 0 && !isRefreshing) {
+        const currentY = e.touches[0].clientY;
+        const pullDistance = currentY - startY;
+        
+        if (pullDistance > 100) {
+          isRefreshing = true;
+          loadInstrumentsFromFirebase();
+          setTimeout(() => { isRefreshing = false; }, 1000);
+        }
+      }
+    };
+    
+    document.addEventListener('touchstart', handleTouchStart);
+    document.addEventListener('touchmove', handleTouchMove);
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchmove', handleTouchMove);
+    };
+  }, [loadInstrumentsFromFirebase]);
+
+  const forceUpdateFirebase = async () => {
+    try {
+      setLoading(true);
+      console.log('Force updating Firebase...');
+      await FirebaseService.clearAllInstruments();
+      
+      for (const instrument of initialInstruments) {
+        await FirebaseService.addInstrument({
+          id: instrument.id,
+          name: instrument.name,
+          type: instrument.type,
+          image: instrument.image,
+          status: 'available',
+          checkedOutBy: null
+        });
+      }
+      
+      await loadInstrumentsFromFirebase();
+      setShowForceUpdate(false);
+    } catch (error) {
+      console.error('Force update failed:', error);
     } finally {
       setLoading(false);
     }
