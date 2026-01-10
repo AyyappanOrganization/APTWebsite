@@ -24,6 +24,7 @@ export default function FinanceTracker() {
   const [paymentStatus, setPaymentStatus] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [oauthReady, setOauthReady] = useState(false);
+  const [oauthInitialized, setOauthInitialized] = useState(false);
   const { user } = useAuth();
 
   const sections = {
@@ -34,19 +35,48 @@ export default function FinanceTracker() {
   };
 
   useEffect(() => {
-    GoogleOAuthService.initialize().then(async () => {
-      setOauthReady(true);
-      // Trigger OAuth flow immediately if no token exists
-      const token = await GoogleOAuthService.getAccessToken();
-      if (token) {
-        loadPaymentStatus();
-      }
-    });
+    if (!oauthInitialized) {
+      setOauthInitialized(true);
+      GoogleOAuthService.initialize().then(async () => {
+        setOauthReady(true);
+        // Trigger OAuth flow immediately if no token exists
+        await GoogleOAuthService.getAccessToken();
+      });
+    }
   }, []);
 
   useEffect(() => {
     if (oauthReady) {
       loadPaymentStatus();
+      
+      // Pull-to-refresh functionality
+      let startY = 0;
+      let isRefreshing = false;
+      
+      const handleTouchStart = (e: TouchEvent) => {
+        startY = e.touches[0].clientY;
+      };
+      
+      const handleTouchMove = (e: TouchEvent) => {
+        if (window.scrollY === 0 && !isRefreshing) {
+          const currentY = e.touches[0].clientY;
+          const pullDistance = currentY - startY;
+          
+          if (pullDistance > 100) {
+            isRefreshing = true;
+            loadPaymentStatus();
+            setTimeout(() => { isRefreshing = false; }, 1000);
+          }
+        }
+      };
+      
+      document.addEventListener('touchstart', handleTouchStart);
+      document.addEventListener('touchmove', handleTouchMove);
+      
+      return () => {
+        document.removeEventListener('touchstart', handleTouchStart);
+        document.removeEventListener('touchmove', handleTouchMove);
+      };
     }
   }, [selectedSection, oauthReady]);
 

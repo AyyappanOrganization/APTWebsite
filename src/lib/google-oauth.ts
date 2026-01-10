@@ -9,6 +9,7 @@ export class GoogleOAuthService {
   private static SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
   private static tokenClient: any = null;
   private static accessToken: string | null = null;
+  private static isAuthenticating: boolean = false;
 
   static async initialize() {
     // Try to restore token from localStorage
@@ -64,6 +65,11 @@ export class GoogleOAuthService {
       }
     }
 
+    // Prevent multiple simultaneous authentication attempts
+    if (this.isAuthenticating) {
+      return null;
+    }
+
     // No token found, need to request one
     return new Promise((resolve) => {
       if (!this.tokenClient) {
@@ -71,8 +77,10 @@ export class GoogleOAuthService {
         return;
       }
 
+      this.isAuthenticating = true;
       const originalCallback = this.tokenClient.callback;
       this.tokenClient.callback = (response: any) => {
+        this.isAuthenticating = false;
         if (response.access_token) {
           this.accessToken = response.access_token;
           // Store in localStorage

@@ -32,6 +32,7 @@ export default function AttendanceTracker() {
   const [attendanceStatus, setAttendanceStatus] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [oauthReady, setOauthReady] = useState(false);
+  const [oauthInitialized, setOauthInitialized] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [absenceReport, setAbsenceReport] = useState<AbsenceReport[]>([]);
   const { user } = useAuth();
@@ -44,14 +45,48 @@ export default function AttendanceTracker() {
   };
 
   useEffect(() => {
-    GoogleOAuthService.initialize().then(() => {
-      setOauthReady(true);
-    });
+    if (!oauthInitialized) {
+      setOauthInitialized(true);
+      GoogleOAuthService.initialize().then(async () => {
+        setOauthReady(true);
+        // Trigger OAuth flow immediately if no token exists
+        await GoogleOAuthService.getAccessToken();
+      });
+    }
   }, []);
 
   useEffect(() => {
     if (oauthReady) {
       loadTodayAttendance();
+      
+      // Pull-to-refresh functionality
+      let startY = 0;
+      let isRefreshing = false;
+      
+      const handleTouchStart = (e: TouchEvent) => {
+        startY = e.touches[0].clientY;
+      };
+      
+      const handleTouchMove = (e: TouchEvent) => {
+        if (window.scrollY === 0 && !isRefreshing) {
+          const currentY = e.touches[0].clientY;
+          const pullDistance = currentY - startY;
+          
+          if (pullDistance > 100) {
+            isRefreshing = true;
+            loadTodayAttendance();
+            setTimeout(() => { isRefreshing = false; }, 1000);
+          }
+        }
+      };
+      
+      document.addEventListener('touchstart', handleTouchStart);
+      document.addEventListener('touchmove', handleTouchMove);
+      
+      return () => {
+        document.removeEventListener('touchstart', handleTouchStart);
+        document.removeEventListener('touchmove', handleTouchMove);
+      };
     }
   }, [selectedSection, oauthReady]);
 
