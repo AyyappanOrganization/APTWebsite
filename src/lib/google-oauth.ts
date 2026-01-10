@@ -100,7 +100,7 @@ export class GoogleOAuthService {
         this.tokenClient.callback = originalCallback;
       };
 
-      this.tokenClient.requestAccessToken();
+      this.tokenClient.requestAccessToken({ prompt: 'consent' });
     });
   }
 
