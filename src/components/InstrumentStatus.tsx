@@ -162,7 +162,19 @@ export default function InstrumentStatus({ initialInstruments }: InstrumentStatu
     
     try {
       setLoading(true);
-      const accessToken = localStorage.getItem('google_sheets_token');
+      let accessToken = localStorage.getItem('google_sheets_token');
+      
+      if (!accessToken && user) {
+        console.log('No Sheets token, requesting permission...');
+        const { GoogleOAuthService } = await import('@/lib/google-oauth');
+        try {
+          accessToken = await GoogleOAuthService.getAccessToken();
+        } catch (error) {
+          console.error('Failed to get Sheets token:', error);
+          return;
+        }
+      }
+      
       if (!accessToken) {
         console.error('No access token available');
         return;
@@ -201,7 +213,19 @@ export default function InstrumentStatus({ initialInstruments }: InstrumentStatu
   const handleCheckIn = async (instrument: Instrument) => {
     try {
       setLoading(true);
-      const accessToken = localStorage.getItem('google_sheets_token');
+      let accessToken = localStorage.getItem('google_sheets_token');
+      
+      if (!accessToken && user) {
+        console.log('No Sheets token, requesting permission...');
+        const { GoogleOAuthService } = await import('@/lib/google-oauth');
+        try {
+          accessToken = await GoogleOAuthService.getAccessToken();
+        } catch (error) {
+          console.error('Failed to get Sheets token:', error);
+          return;
+        }
+      }
+      
       if (!accessToken) {
         console.error('No access token available');
         return;
