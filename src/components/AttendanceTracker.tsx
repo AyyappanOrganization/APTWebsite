@@ -35,7 +35,7 @@ export default function AttendanceTracker() {
   const [oauthInitialized, setOauthInitialized] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [absenceReport, setAbsenceReport] = useState<AbsenceReport[]>([]);
-  const [hasToken, setHasToken] = useState(false);
+
   const { user } = useAuth();
 
   const sections = {
@@ -50,9 +50,7 @@ export default function AttendanceTracker() {
       setOauthInitialized(true);
       GoogleOAuthService.initialize().then(() => {
         setOauthReady(true);
-        // Check if we have a stored token
-        const token = localStorage.getItem('google_access_token');
-        setHasToken(!!token);
+
       });
     }
   }, []);
@@ -150,17 +148,7 @@ export default function AttendanceTracker() {
     return () => clearInterval(interval);
   }, [oauthReady, user]);
 
-  const connectToSheets = async () => {
-    try {
-      const token = await GoogleOAuthService.getAccessToken();
-      if (token) {
-        setHasToken(true);
-        loadTodayAttendance();
-      }
-    } catch (error) {
-      console.error('Failed to connect to Google Sheets:', error);
-    }
-  };
+
 
   const loadTodayAttendance = async () => {
     try {
@@ -403,17 +391,7 @@ export default function AttendanceTracker() {
         </div>
       )}
 
-      {!hasToken && oauthReady && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4 text-center">
-          <p className="text-yellow-800 mb-2">Connect to Google Sheets to track attendance</p>
-          <button
-            onClick={connectToSheets}
-            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors"
-          >
-            📊 Connect to Google Sheets
-          </button>
-        </div>
-      )}
+
 
       {/* Controls */}
       <div className="bg-white rounded-lg shadow-md p-3 mb-2">
