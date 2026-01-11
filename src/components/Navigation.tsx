@@ -39,7 +39,7 @@ export default function Navigation() {
           
           {/* User Info and Logout */}
           <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">Welcome, {user?.displayName}</span>
+            <span className="text-sm text-gray-600">Welcome, {user?.name}</span>
             <button
               onClick={logout}
               className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md transition-colors text-xs"
