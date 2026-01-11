@@ -319,6 +319,11 @@ export default function InstrumentStatus({ initialInstruments }: InstrumentStatu
                 src={instrument.image} 
                 alt={instrument.name}
                 className="w-full h-24 object-cover"
+                key={`${instrument.id}-${activeTab}`}
+                onError={(e) => {
+                  console.log('Image failed to load:', instrument.image);
+                  e.currentTarget.src = '/images/default-instrument.jpg';
+                }}
               />
               {!instrument.isCheckedOut ? (
                 <div className="absolute top-1 right-1 bg-green-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs">
