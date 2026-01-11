@@ -34,8 +34,19 @@ export default function InstrumentStatus({ initialInstruments }: InstrumentStatu
       setLoading(true);
       console.log('Loading instruments from sheets...');
       
-      let accessToken = GoogleSignInService.getAccessToken();
-      console.log('Access token available:', !!accessToken);
+      let accessToken = localStorage.getItem('google_sheets_token');
+      console.log('Google Sheets token available:', !!accessToken);
+      
+      if (!accessToken && user) {
+        console.log('User signed in but no Sheets token, requesting permission...');
+        const { GoogleOAuthService } = await import('@/lib/google-oauth');
+        try {
+          accessToken = await GoogleOAuthService.getAccessToken();
+          console.log('Got Sheets access token:', !!accessToken);
+        } catch (error) {
+          console.error('Failed to get Sheets token:', error);
+        }
+      }
       
       if (!accessToken) {
         console.log('No access token available - user needs to sign in with Sheets permission');
@@ -115,7 +126,7 @@ export default function InstrumentStatus({ initialInstruments }: InstrumentStatu
     try {
       setLoading(true);
       console.log('Force updating Google Sheets...');
-      const accessToken = GoogleSignInService.getAccessToken();
+      const accessToken = localStorage.getItem('google_sheets_token');
       if (!accessToken) {
         console.error('No access token available');
         return;
@@ -151,7 +162,7 @@ export default function InstrumentStatus({ initialInstruments }: InstrumentStatu
     
     try {
       setLoading(true);
-      const accessToken = GoogleSignInService.getAccessToken();
+      const accessToken = localStorage.getItem('google_sheets_token');
       if (!accessToken) {
         console.error('No access token available');
         return;
@@ -190,7 +201,7 @@ export default function InstrumentStatus({ initialInstruments }: InstrumentStatu
   const handleCheckIn = async (instrument: Instrument) => {
     try {
       setLoading(true);
-      const accessToken = GoogleSignInService.getAccessToken();
+      const accessToken = localStorage.getItem('google_sheets_token');
       if (!accessToken) {
         console.error('No access token available');
         return;
