@@ -23,6 +23,12 @@ export default function InstrumentStatus({ initialInstruments }: InstrumentStatu
   const [loading, setLoading] = useState(false);
   const [showForceUpdate, setShowForceUpdate] = useState(false);
 
+  // Refresh when switching tabs
+  const handleTabChange = (tab: 'available' | 'checkedOut') => {
+    setActiveTab(tab);
+    loadInstrumentsFromSheets();
+  };
+
   const loadInstrumentsFromSheets = useCallback(async () => {
     try {
       setLoading(true);
@@ -256,7 +262,7 @@ export default function InstrumentStatus({ initialInstruments }: InstrumentStatu
       <div className="bg-white rounded-lg shadow-md p-2 mb-2">
         <div className="flex">
           <button
-            onClick={() => setActiveTab('available')}
+            onClick={() => handleTabChange('available')}
             className={`flex-1 py-2 px-3 rounded-lg font-medium transition-colors text-sm ${
               activeTab === 'available' 
                 ? 'bg-green-500 text-white' 
@@ -266,7 +272,7 @@ export default function InstrumentStatus({ initialInstruments }: InstrumentStatu
             Available ({availableInstruments.length})
           </button>
           <button
-            onClick={() => setActiveTab('checkedOut')}
+            onClick={() => handleTabChange('checkedOut')}
             className={`flex-1 py-2 px-3 rounded-lg font-medium transition-colors text-sm ${
               activeTab === 'checkedOut' 
                 ? 'bg-red-500 text-white' 
